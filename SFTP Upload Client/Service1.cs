@@ -26,6 +26,7 @@ namespace SFTP_Upload_Client
         Thread thMain;
         public static Boolean isRunning = true;
         public static Boolean bRunning = false;
+        private static ManualResetEvent shutdownEvent = new ManualResetEvent(false);
 
         public static String presenceDBConnString = "";
         public static String sourceFolder = "";
@@ -40,7 +41,7 @@ namespace SFTP_Upload_Client
         public static Boolean bCreateDailyFolder = false;
         public static Boolean bRunPeriodic = false;
         public static Int32 waitTime = 30;
-        public static Int32 triggerHouor = 5;
+        public static Int32 triggerHour = 5;
         public static Int32 triggerMinute = 0;
 
         IScheduler scheduler;
@@ -67,8 +68,11 @@ namespace SFTP_Upload_Client
         protected override void OnStop()
         {
             isRunning = false;
-            Thread.Sleep(1000);
-            thMain.Abort();
+            shutdownEvent.Set();
+            if (!thMain.Join(2000))
+            {
+                thMain.Abort(); // Fallback if thread doesn't stop
+            }
         }
 
         TimeSpan ToTime(string value)
@@ -94,18 +98,20 @@ namespace SFTP_Upload_Client
                 sftpHost = appConfig.Settings["SFTP Host"].Value;
                 sftpUser = appConfig.Settings["SFTP User"].Value;
                 sftpPassword = appConfig.Settings["SFTP Password"].Value;
-                try { bSimpleFileUpload = Boolean.Parse(appConfig.Settings["Simple File Upload Only"].Value); } catch (Exception e) { }
-                try { bDeleteLocalFile = Boolean.Parse(appConfig.Settings["Delete local file"].Value); } catch (Exception e) { }
-                try { bMoveLocalFile = Boolean.Parse(appConfig.Settings["Move local file"].Value); } catch (Exception e) { }
-                try { bCreateDailyFolder = Boolean.Parse(appConfig.Settings["Create Daily Folder"].Value); } catch (Exception e) { }
-                try { sftpPort = Int32.Parse(appConfig.Settings["SFTP Port"].Value); } catch (Exception e) { }
-                try { bRunPeriodic = Boolean.Parse(appConfig.Settings["Run Periodic"].Value); } catch (Exception e) { bRunPeriodic = false; }
-                try { waitTime = Int32.Parse(appConfig.Settings["Wait Time Sec"].Value); } catch (Exception e) { }
+
+                if (!Boolean.TryParse(appConfig.Settings["Simple File Upload Only"]?.Value, out bSimpleFileUpload)) Log.Warn("Invalid Simple File Upload Only config");
+                if (!Boolean.TryParse(appConfig.Settings["Delete local file"]?.Value, out bDeleteLocalFile)) Log.Warn("Invalid Delete local file config");
+                if (!Boolean.TryParse(appConfig.Settings["Move local file"]?.Value, out bMoveLocalFile)) Log.Warn("Invalid Move local file config");
+                if (!Boolean.TryParse(appConfig.Settings["Create Daily Folder"]?.Value, out bCreateDailyFolder)) Log.Warn("Invalid Create Daily Folder config");
+                if (!Int32.TryParse(appConfig.Settings["SFTP Port"]?.Value, out sftpPort)) Log.Warn("Invalid SFTP Port config, defaulting to 22");
+                if (!Boolean.TryParse(appConfig.Settings["Run Periodic"]?.Value, out bRunPeriodic)) bRunPeriodic = false;
+                if (!Int32.TryParse(appConfig.Settings["Wait Time Sec"]?.Value, out waitTime)) Log.Warn("Invalid Wait Time Sec config");
+
                 try
                 {
                     string trigTime = appConfig.Settings["Trigger Time"].Value;
                     TimeSpan ts = ToTime(trigTime);
-                    triggerHouor = ts.Hours;
+                    triggerHour = ts.Hours;
                     triggerMinute = ts.Minutes;
                 } catch (Exception e)
                 {
@@ -122,7 +128,7 @@ namespace SFTP_Upload_Client
                 Log.Debug("SFTP User => [" + sftpUser + "]");
                 Log.Debug("SFTP Password => [" + sftpPassword + "]");
                 Log.Debug("Simple File Uploader => [" + bSimpleFileUpload + "]");
-                Log.Debug("Trigger time => [" + triggerHouor + ":" + triggerMinute + "]");
+                Log.Debug("Trigger time => [" + triggerHour + ":" + triggerMinute + "]");
                 Log.Debug("Delete File after upload => [" + bDeleteLocalFile + "]");
                 Log.Debug("Move File after upload => [" + bMoveLocalFile + "]");
                 Log.Debug("Create Daily Folder in Destination => [" + bCreateDailyFolder + "]");
@@ -133,7 +139,7 @@ namespace SFTP_Upload_Client
             }
             catch (Exception e)
             {
-                Log.Error("Failed to get configuration settings");
+                Log.Error("Failed to get configuration settings", e);
                 return false;
             }
         }
@@ -165,7 +171,7 @@ namespace SFTP_Upload_Client
             else
             {
                 Log.Debug("Running on schedule");
-                ITrigger trigOnce = TriggerBuilder.Create().WithIdentity("Once a day").StartNow().WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(triggerHouor, triggerMinute)).ForJob(job).Build();
+                ITrigger trigOnce = TriggerBuilder.Create().WithIdentity("Once a day").StartNow().WithSchedule(CronScheduleBuilder.DailyAtHourAndMinute(triggerHour, triggerMinute)).ForJob(job).Build();
                 scheduler.ScheduleJob(trigOnce);
             }
 
@@ -206,7 +212,7 @@ namespace SFTP_Upload_Client
 
             while (isRunning)
             {
-                Thread.Sleep(1000);
+                shutdownEvent.WaitOne(1000);
             }
             scheduler.Shutdown();
             //scheduler2.Shutdown();
@@ -222,6 +228,7 @@ namespace SFTP_Upload_Client
             else
                 folder = destBaseFolder;
 
+            // SFTPUpload.CreateFolder now checks if exists
             client.CreateFolder(folder);
             return folder + "/";
         }
@@ -236,118 +243,131 @@ namespace SFTP_Upload_Client
             bRunning = true;
             try
             {
-                SFTPUpload sftpClient = new SFTPUpload(sftpHost, sftpPort, sftpUser, sftpPassword);
-                //Get the list from the DB
-                Boolean bDoLoop = true;
-                if (bSimpleFileUpload)
+                using (SFTPUpload sftpClient = new SFTPUpload(sftpHost, sftpPort, sftpUser, sftpPassword))
                 {
-                    //We will just do a simple directory upload of everything in the folder
-                    Log.Debug("Configured for simple file upload from folder [" + sourceFolder + "]");
-                    DirectoryInfo di = new DirectoryInfo(sourceFolder);
-                    FileInfo[] fileInfo = di.GetFiles("*.*");
-                    if (fileInfo != null && fileInfo.Length > 0)
+                    //Get the list from the DB
+                    Boolean bDoLoop = true;
+                    String targetFolder = "";
+
+                    if (bSimpleFileUpload)
                     {
-                        String targetFolder = "";
-                        foreach (var fi in fileInfo)
+                        //We will just do a simple directory upload of everything in the folder
+                        Log.Debug("Configured for simple file upload from folder [" + sourceFolder + "]");
+                        DirectoryInfo di = new DirectoryInfo(sourceFolder);
+                        FileInfo[] fileInfo = di.GetFiles("*.*");
+                        if (fileInfo != null && fileInfo.Length > 0)
                         {
-                            //Lets do the copy
                             if (!sftpClient.IsConnected())
                                 sftpClient.Connect();
 
-                            Log.Debug("Uploading file [" + fi.FullName + "]...");
+                            targetFolder = GetDestFolder(sftpClient);
 
-                            if (targetFolder.Equals(""))
-                                targetFolder = GetDestFolder(sftpClient);
-                            String destFile = targetFolder + fi.Name;
-                            if (sftpClient.UploadFile(fi.FullName, destFile/*, bDeleteLocalFile*/))
-                            {
-                                Log.Debug("Upload [" + fi.Name + "] - Success ");
-                                if(bMoveLocalFile)
-                                {
-                                    sftpClient.MoveLocalFile(fi.FullName,"Uploaded");
-                                }
-                                else if (bDeleteLocalFile)
-                                {
-                                    sftpClient.DeleteLocalFile(fi.FullName);
-                                }
-                            }
-                            else
-                            {
-                                Log.Debug("Failed to upload file [" + fi.Name + "] ! [" + sftpClient.IsConnected().ToString() + "]");
-                            }
-                        }
-                        if (sftpClient.IsConnected())
-                            sftpClient.Disconnect();
-                        Log.Debug("Upload completed");
-                    }
-                }
-                else
-                {
-                    cDatabase cdb = new cDatabase();
-                    do
-                    {
-                        Queue<cDatabase.tsCopyRequest> reqQueue = cdb.getCopyRequests(100);
-                        if (reqQueue.Count > 0)
-                        {
-                            String targetFolder = "";
-                            foreach (var item in reqQueue)
+                            foreach (var fi in fileInfo)
                             {
                                 //Lets do the copy
                                 if (!sftpClient.IsConnected())
                                     sftpClient.Connect();
 
-                                DirectoryInfo di = new DirectoryInfo(sourceFolder);
-                                //Find the file mathing the search
-                                FileInfo[] fileInfo = di.GetFiles(item.source + "*");
-                                if (fileInfo != null && fileInfo.Length > 0)
-                                {
-                                    foreach (var fi in fileInfo)
-                                    {
-                                        Log.Debug("Uploading file [" + fi.Name + "]...");
+                                Log.Debug("Uploading file [" + fi.FullName + "]...");
 
-                                        if (targetFolder.Equals(""))
-                                            targetFolder = GetDestFolder(sftpClient);
-                                        String destFile = targetFolder + fi.Name;
-                                        if (sftpClient.UploadFile(fi.FullName, destFile, bDeleteLocalFile))
-                                            cdb.updateCopyRequests(item, 4);
-                                        else
-                                        {
-                                            Log.Debug("Failed to upload file [" + fi.Name + "] ! [" + sftpClient.IsConnected().ToString() + "]");
-                                            cdb.updateCopyRequests(item, 8);
-                                        }
+                                String destFile = targetFolder + fi.Name;
+                                // Pass bDeleteLocalFile. If bMoveLocalFile is true, bDeleteLocal should be false here, or handled.
+                                // Logic: if bMoveLocalFile, we move it manually. If bDeleteLocalFile, SFTPUpload does it.
+                                // Prioritize Move over Delete in logic below.
+
+                                bool deleteAfterUpload = bDeleteLocalFile && !bMoveLocalFile;
+
+                                if (sftpClient.UploadFile(fi.FullName, destFile, deleteAfterUpload))
+                                {
+                                    Log.Debug("Upload [" + fi.Name + "] - Success ");
+                                    if(bMoveLocalFile)
+                                    {
+                                        sftpClient.MoveLocalFile(fi.FullName,"Uploaded");
                                     }
                                 }
                                 else
                                 {
-                                    Log.Debug("File [" + item.source + "] not found in local folder");
-                                    cdb.updateCopyRequests(item, 9);
+                                    Log.Debug("Failed to upload file [" + fi.Name + "] ! [" + sftpClient.IsConnected().ToString() + "]");
                                 }
                             }
+                            Log.Debug("Upload completed");
                         }
-                        else
+                    }
+                    else
+                    {
+                        cDatabase cdb = new cDatabase(presenceDBConnString);
+                        do
                         {
-                            //Lets see if there are any CSV files to copy
-                            DirectoryInfo di = new DirectoryInfo(sourceFolder);
-                            FileInfo[] fileInfo = di.GetFiles("*.csv");
-                            if (fileInfo.Length > 0)
+                            Queue<cDatabase.tsCopyRequest> reqQueue = cdb.getCopyRequests(100);
+                            if (reqQueue.Count > 0)
                             {
-                                Log.Debug("There are [" + fileInfo.Length + "] CSV files in the folder !"); ;
-                                String targetFolder = GetDestFolder(sftpClient);
-                                foreach (FileInfo fi in fileInfo)
+                                if (!sftpClient.IsConnected())
+                                    sftpClient.Connect();
+
+                                if (String.IsNullOrEmpty(targetFolder))
+                                    targetFolder = GetDestFolder(sftpClient);
+
+                                foreach (var item in reqQueue)
                                 {
-                                    Log.Debug("Uploading file [" + fi.FullName + "]");
-                                    String destFile = targetFolder + fi.Name;
-                                    sftpClient.UploadFile(fi.FullName, destFile, bDeleteLocalFile);
+                                    //Lets do the copy
+                                    if (!sftpClient.IsConnected())
+                                        sftpClient.Connect();
+
+                                    DirectoryInfo di = new DirectoryInfo(sourceFolder);
+                                    //Find the file mathing the search
+                                    FileInfo[] fileInfo = di.GetFiles(item.source + "*");
+                                    if (fileInfo != null && fileInfo.Length > 0)
+                                    {
+                                        foreach (var fi in fileInfo)
+                                        {
+                                            Log.Debug("Uploading file [" + fi.Name + "]...");
+
+                                            String destFile = targetFolder + fi.Name;
+                                            if (sftpClient.UploadFile(fi.FullName, destFile, bDeleteLocalFile))
+                                                cdb.updateCopyRequests(item, 4);
+                                            else
+                                            {
+                                                Log.Debug("Failed to upload file [" + fi.Name + "] ! [" + sftpClient.IsConnected().ToString() + "]");
+                                                cdb.updateCopyRequests(item, 8);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        Log.Debug("File [" + item.source + "] not found in local folder");
+                                        cdb.updateCopyRequests(item, 9);
+                                    }
                                 }
                             }
                             else
-                                Log.Debug("No CSV files found to upload !");
+                            {
+                                //Lets see if there are any CSV files to copy
+                                DirectoryInfo di = new DirectoryInfo(sourceFolder);
+                                FileInfo[] fileInfo = di.GetFiles("*.csv");
+                                if (fileInfo.Length > 0)
+                                {
+                                    if (!sftpClient.IsConnected())
+                                        sftpClient.Connect();
 
-                            if (sftpClient.IsConnected())
-                                sftpClient.Disconnect();
-                            bDoLoop = false;
-                        }
-                    } while (bDoLoop);
+                                    Log.Debug("There are [" + fileInfo.Length + "] CSV files in the folder !"); ;
+
+                                    if (String.IsNullOrEmpty(targetFolder))
+                                        targetFolder = GetDestFolder(sftpClient);
+
+                                    foreach (FileInfo fi in fileInfo)
+                                    {
+                                        Log.Debug("Uploading file [" + fi.FullName + "]");
+                                        String destFile = targetFolder + fi.Name;
+                                        sftpClient.UploadFile(fi.FullName, destFile, bDeleteLocalFile);
+                                    }
+                                }
+                                else
+                                    Log.Debug("No CSV files found to upload !");
+
+                                bDoLoop = false;
+                            }
+                        } while (bDoLoop);
+                    }
                 }
             }
             catch (Exception e)

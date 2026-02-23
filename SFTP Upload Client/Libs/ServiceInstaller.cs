@@ -128,6 +128,7 @@ public class ServiceUtil
         }
         catch (Exception e)
         {
+            Console.WriteLine("Failed to install service: " + e.Message);
             return false;
         }
         return true;
@@ -149,6 +150,7 @@ public class ServiceUtil
         }
         catch (Exception e)
         {
+            Console.WriteLine("Failed to uninstall service: " + e.Message);
             return false;
         }
         return true;
