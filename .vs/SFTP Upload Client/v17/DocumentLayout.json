@@ -1,0 +1,118 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\sftp upload client\\app.config||{FA3CD31E-987B-443A-9B81-186104E8DAC1}",
+      "RelativeMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|solutionrelative:sftp upload client\\app.config||{FA3CD31E-987B-443A-9B81-186104E8DAC1}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|c:\\marius\\onedrive - inovo\\projects\\c#\\sftp upload client\\sftp upload client\\service1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|solutionrelative:sftp upload client\\service1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|c:\\marius\\onedrive - inovo\\projects\\c#\\sftp upload client\\sftp upload client\\sftpupload.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|solutionrelative:sftp upload client\\sftpupload.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|c:\\marius\\onedrive - inovo\\projects\\c#\\sftp upload client\\sftp upload client\\properties\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|solutionrelative:sftp upload client\\properties\\assemblyinfo.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{00000000-0000-0000-0000-000000000000}|\u003CSolution\u003E|SFTP Upload Client||{04B8AB82-A572-4FEF-95CE-5222444B6B64}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E8352833-3906-4726-9083-CD9A79913022}|SFTP Upload Client\\SFTP Upload Client.csproj|c:\\marius\\onedrive - inovo\\projects\\c#\\sftp upload client\\sftp upload client\\||{B270807C-D8C6-49EB-8EBE-8E8D566637A1}|a54ad834-9219-4aa6-b589-607af21c3e26"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:131:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:132:0:{1fc202d4-d401-403c-9834-5b218574bb67}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:129:0:{13b12e3e-c1b4-4539-9371-4fe9a0d523fc}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "AssemblyInfo.cs",
+              "DocumentMoniker": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\Properties\\AssemblyInfo.cs",
+              "RelativeDocumentMoniker": "SFTP Upload Client\\Properties\\AssemblyInfo.cs",
+              "ToolTip": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\Properties\\AssemblyInfo.cs",
+              "RelativeToolTip": "SFTP Upload Client\\Properties\\AssemblyInfo.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-20T14:52:40.871Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "SFTP Upload Client",
+              "DocumentMoniker": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\SFTP Upload Client.csproj",
+              "RelativeDocumentMoniker": "SFTP Upload Client\\SFTP Upload Client.csproj",
+              "ToolTip": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\SFTP Upload Client.csproj",
+              "RelativeToolTip": "SFTP Upload Client\\SFTP Upload Client.csproj",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-02-20T14:52:26.843Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "SFTPUpload.cs",
+              "DocumentMoniker": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\SFTPUpload.cs",
+              "RelativeDocumentMoniker": "SFTP Upload Client\\SFTPUpload.cs",
+              "ToolTip": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\SFTPUpload.cs",
+              "RelativeToolTip": "SFTP Upload Client\\SFTPUpload.cs",
+              "ViewState": "AgIAABgAAAAAAAAAAAA5wKAAAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-20T14:25:19.169Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "App.config",
+              "DocumentMoniker": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\App.config",
+              "RelativeDocumentMoniker": "SFTP Upload Client\\App.config",
+              "ToolTip": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\App.config",
+              "RelativeToolTip": "SFTP Upload Client\\App.config",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABIAAAAEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000601|",
+              "WhenOpened": "2026-02-20T14:19:52.628Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Service1.cs",
+              "DocumentMoniker": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\Service1.cs",
+              "RelativeDocumentMoniker": "SFTP Upload Client\\Service1.cs",
+              "ToolTip": "C:\\Marius\\OneDrive - INOVO\\Projects\\C#\\SFTP Upload Client\\SFTP Upload Client\\Service1.cs",
+              "RelativeToolTip": "SFTP Upload Client\\Service1.cs",
+              "ViewState": "AgIAAI8AAAAAAAAAAAApwJkAAAApAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-20T14:19:52.65Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
