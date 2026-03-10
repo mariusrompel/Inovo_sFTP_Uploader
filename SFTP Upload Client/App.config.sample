@@ -46,6 +46,9 @@
         <conversionPattern value="%date [%thread] %level %logger - %message%newline" />
       </layout>
     </appender>
+    <logger name="Quartz">
+      <level value="WARN" />
+    </logger>
     <root>
       <level value="ALL" />
       <appender-ref ref="ConsoleAppender" />

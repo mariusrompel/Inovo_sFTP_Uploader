@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace SFTP_Upload_Client
 {
-    class SFTPUpload
+    class SFTPUpload : IDisposable
     {
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -33,11 +33,7 @@ namespace SFTP_Upload_Client
             }
         }
 
-        public SFTPUpload()
-        {
-
-        }
-        public SFTPUpload (String host, Int32 port, String username, String password)
+        public SFTPUpload(String host, Int32 port, String username, String password)
         {
             this.host = host;
             this.port = port;
@@ -45,29 +41,15 @@ namespace SFTP_Upload_Client
             this.password = password;
         }
 
-        public Boolean IsConnected() { try { return client.IsConnected;  } catch (Exception e) { return false; } }
-
-        public Boolean Connect(String host, Int32 port, String username, String password)
+        public Boolean IsConnected()
         {
-            this.host = host;
-            this.port = port;
-            this.username = username;
-            this.password = password;
-
-            try
-            {
-                client = new SftpClient(host, port, username, password);
-                client.Connect();
-                return client.IsConnected;
-            }
-            catch (Exception e)
-            {
-                Log.Debug("Failed to connect to SFTP Server at [" + host + "] : " + e.Message);
-                return false;
-            }
+            return client != null && client.IsConnected;
         }
+
         public Boolean Connect()
         {
+            if (IsConnected()) return true;
+
             try
             {
                 KeyboardInteractiveAuthenticationMethod kauth = new KeyboardInteractiveAuthenticationMethod(username);
@@ -76,14 +58,13 @@ namespace SFTP_Upload_Client
 
                 ConnectionInfo connectionInfo = new ConnectionInfo(host, port, username, pauth, kauth);
 
-                //client = new SftpClient(host, port, username, password);
                 client = new SftpClient(connectionInfo);
                 client.Connect();
                 return client.IsConnected;
             } 
             catch (Exception e)
             {
-                Log.Debug("Failed to connect to SFTP Server at [" + host + "] : " + e.Message);
+                Log.Error("Failed to connect to SFTP Server at [" + host + "] : " + e.Message, e);
                 return false;
             }
         }
@@ -91,9 +72,10 @@ namespace SFTP_Upload_Client
         {
             try
             {
-                if (client != null && client.IsConnected)
+                if (client != null)
                 {
-                    client.Disconnect();
+                    if (client.IsConnected)
+                        client.Disconnect();
                     client.Dispose();
                     client = null;
                 }
@@ -104,18 +86,27 @@ namespace SFTP_Upload_Client
             }
         }
 
+        public void Dispose()
+        {
+            Disconnect();
+        }
+
         public Boolean CreateFolder(String folder)
         {
             if (IsConnected())
             {
                 try
                 {
-                    client.CreateDirectory(folder);
+                    if (!client.Exists(folder))
+                    {
+                        client.CreateDirectory(folder);
+                    }
                     return true;
                 }
                 catch(Exception e)
                 {
-                    Log.Debug("Failed to create folder [" + folder + "] : " + e.Message); 
+                    Log.Error("Failed to create folder [" + folder + "] : " + e.Message, e);
+                    return false;
                 }
             }
             return false;
@@ -127,20 +118,18 @@ namespace SFTP_Upload_Client
             {
                 try
                 {
-                    var fileStream = new FileStream(uploadfile, FileMode.Open);
-                    if (fileStream != null)
+                    using (var fileStream = new FileStream(uploadfile, FileMode.Open))
                     {
                         Log.Debug("Local file opened [" + uploadfile + "]");
-                        client.BufferSize = 4 * 1024;
+                        client.BufferSize = 80 * 1024;
                         client.UploadFile(fileStream, remoteFile, null);
-                        fileStream.Close();
-                        if (bDeleteLocal)
-                        {
-
-                            File.Delete(uploadfile);
-                        }
-                        return true;
                     }
+
+                    if (bDeleteLocal)
+                    {
+                        File.Delete(uploadfile);
+                    }
+                    return true;
                 } 
                 catch (Exception e)
                 {

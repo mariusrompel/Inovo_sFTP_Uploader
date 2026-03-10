@@ -119,7 +119,7 @@ public class ServiceUtil
             SvcInstaller si = new SvcInstaller(ServiceName, ServiceDescription);
             ti.Installers.Add(si);
 
-            string basePath = Assembly.GetExecutingAssembly().Location;
+            string basePath = Environment.ProcessPath;
             string path = string.Format("/assemblypath={0}", basePath);
             string[] cmdline = { path };
             InstallContext ctx = new InstallContext(Path.ChangeExtension(basePath, ".InstallLog"), cmdline);
@@ -128,6 +128,7 @@ public class ServiceUtil
         }
         catch (Exception e)
         {
+            Console.WriteLine("Failed to install service: " + e.Message);
             return false;
         }
         return true;
@@ -140,8 +141,8 @@ public class ServiceUtil
             TransactedInstaller ti = new TransactedInstaller();
             SvcInstaller si = new SvcInstaller(ServiceName, ServiceDescription);
             ti.Installers.Add(si);
-            string basePath = Assembly.GetExecutingAssembly().Location;
-            string path = string.Format("/assemblypath=\"{0}\"", Assembly.GetExecutingAssembly().Location);
+            string basePath = Environment.ProcessPath;
+            string path = string.Format("/assemblypath=\"{0}\"", basePath);
             string[] cmdline = { path };
             InstallContext ctx = new InstallContext(Path.ChangeExtension(basePath, ".UninstallLog"), cmdline);
             ti.Context = ctx;
@@ -149,6 +150,7 @@ public class ServiceUtil
         }
         catch (Exception e)
         {
+            Console.WriteLine("Failed to uninstall service: " + e.Message);
             return false;
         }
         return true;
